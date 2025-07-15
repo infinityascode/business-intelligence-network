@@ -343,6 +343,7 @@
             backdrop-filter: blur(10px);
             font-size: 12px;
             text-decoration: none;
+            z-index: 999;
         }
 
         .back-btn:hover {
@@ -350,11 +351,15 @@
             border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-2px);
         }
+
+        .back-btn:visited {
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-btn">← Back to Menu</a>
+        <a href="https://infinityascode.github.io/business-intelligence-network/" class="back-btn">← Back to Menu</a>
         <div class="title">∞aC - Interconnected Business Intelligence Network</div>
         <div class="subtitle">Hover over nodes to see connections • Click to explore relationships</div>
         
