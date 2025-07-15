@@ -579,7 +579,7 @@
         let animationSpeed = 1;
         let currentStep = 0;
 
-        // Node connections for proper pathfinding
+        // Node connections - updated to support all traversal paths
         const nodeConnections = {
             'context': ['knowledge', 'processes', 'relationships', 'intelligence'],
             'knowledge': ['context', 'market-research', 'competitive-intel', 'client-profiles', 'project-history'],
@@ -591,20 +591,20 @@
             'client-profiles': ['knowledge', 'decision-makers', 'stakeholder-mapping'],
             'project-history': ['knowledge'],
             'lead-processing': ['processes', 'universal-processor', 'client-profiles'],
-            'safety-frameworks': ['processes', 'assumption-prevention', 'quality-assurance'],
+            'safety-frameworks': ['processes', 'assumption-prevention', 'quality-assurance', 'stakeholder-mapping'],
             'quality-assurance': ['processes', 'safety-frameworks'],
             'automation': ['processes'],
-            'stakeholder-mapping': ['relationships', 'client-profiles', 'response-patterns'],
+            'stakeholder-mapping': ['relationships', 'client-profiles', 'response-patterns', 'safety-frameworks', 'decision-makers'],
             'communication-patterns': ['relationships', 'response-patterns', 'behavioral-patterns'],
             'cross-references': ['relationships', 'relationship-intel'],
             'relationship-intel': ['relationships', 'cross-references', 'emergent-insights'],
-            'behavioral-patterns': ['intelligence', 'communication-patterns', 'pattern-evolution'],
-            'learning-systems': ['intelligence', 'pattern-evolution'],
-            'ai-optimization': ['intelligence', 'pattern-evolution', 'adaptive-intelligence'],
+            'behavioral-patterns': ['intelligence', 'communication-patterns', 'pattern-evolution', 'learning-systems'],
+            'learning-systems': ['intelligence', 'pattern-evolution', 'ai-optimization', 'behavioral-patterns'],
+            'ai-optimization': ['intelligence', 'pattern-evolution', 'adaptive-intelligence', 'learning-systems'],
             'strategic-insights': ['intelligence', 'competitive-intel', 'emergent-insights'],
             'universal-processor': ['lead-processing', 'assumption-prevention'],
             'assumption-prevention': ['universal-processor', 'safety-frameworks'],
-            'decision-makers': ['client-profiles'],
+            'decision-makers': ['client-profiles', 'stakeholder-mapping'],
             'response-patterns': ['stakeholder-mapping', 'communication-patterns'],
             'pattern-evolution': ['behavioral-patterns', 'learning-systems', 'ai-optimization'],
             'pattern-synthesis': ['emergent-insights', 'adaptive-intelligence'],
@@ -867,40 +867,43 @@
             const path = question.paths[currentMaturityLevel];
             const responses = question.responses[currentMaturityLevel];
             
-            if (currentStep >= path.length) {
+            // Use responses length instead of path length to ensure all responses are shown
+            if (currentStep >= responses.length) {
                 completeThinking();
                 return;
             }
             
-            const currentNodeId = path[currentStep];
-            const currentNode = document.querySelector(`[data-id="${currentNodeId}"]`);
-            
-            if (!currentNode || !currentNode.classList.contains('visible')) {
-                currentStep++;
-                setTimeout(traverseNetwork, 500 / animationSpeed);
-                return;
-            }
-            
-            const nodePos = getNodePosition(currentNode);
-            const avatar = document.getElementById('ai-avatar');
-            avatar.style.left = (nodePos.x - 10) + 'px';
-            avatar.style.top = (nodePos.y - 10) + 'px';
-            
-            currentNode.classList.add('visited', 'active');
-            
-            if (currentStep > 0) {
-                const prevNodeId = path[currentStep - 1];
-                const connectionLine = document.querySelector(`[data-source="${prevNodeId}"][data-target="${currentNodeId}"], [data-source="${currentNodeId}"][data-target="${prevNodeId}"]`);
-                if (connectionLine) {
-                    connectionLine.classList.add('active-path');
+            // For responses beyond the path length, don't move avatar or highlight nodes
+            if (currentStep < path.length) {
+                const currentNodeId = path[currentStep];
+                const currentNode = document.querySelector(`[data-id="${currentNodeId}"]`);
+                
+                if (currentNode && currentNode.classList.contains('visible')) {
+                    const nodePos = getNodePosition(currentNode);
+                    const avatar = document.getElementById('ai-avatar');
+                    avatar.style.left = (nodePos.x - 10) + 'px';
+                    avatar.style.top = (nodePos.y - 10) + 'px';
+                    
+                    currentNode.classList.add('visited', 'active');
+                    
+                    if (currentStep > 0) {
+                        const prevNodeId = path[currentStep - 1];
+                        const connectionLine = document.querySelector(`[data-source="${prevNodeId}"][data-target="${currentNodeId}"], [data-source="${currentNodeId}"][data-target="${prevNodeId}"]`);
+                        if (connectionLine) {
+                            connectionLine.classList.add('active-path');
+                        }
+                    }
+                    
+                    createParticleTrail(nodePos);
+                    
+                    setTimeout(() => {
+                        currentNode.classList.remove('active');
+                    }, 800 / animationSpeed);
                 }
             }
             
-            createParticleTrail(nodePos);
-            
             setTimeout(() => {
                 addResponseStep(responses[currentStep]);
-                currentNode.classList.remove('active');
                 currentStep++;
                 setTimeout(traverseNetwork, 1500 / animationSpeed);
             }, 800 / animationSpeed);
