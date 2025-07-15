@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>∞aC - AI Thinking Process</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #0a0a0a 0%, #1a1a2e 40%, #16213e 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .network-canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .network-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            user-select: none;
+            line-height: 1.1;
+            padding: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .node.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.8);
+            z-index: 20;
+        }
+
+        .node.visited {
+            box-shadow: 0 0 25px rgba(74, 144, 226, 0.6);
+            border-color: rgba(74, 144, 226, 0.8);
+            background-size: 100% 100%;
+            position: relative;
+        }
+
+        .node.visited::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(74, 144, 226, 0.3), rgba(74, 144, 226, 0.1));
+            z-index: -1;
+        }
+
+        .center-node {
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, #4a90e2 0%, #357abd 100%);
+            font-size: 16px;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .pillar-node {
+            width: 120px;
+            height: 120px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .component-node {
+            width: 90px;
+            height: 90px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .detail-node {
+            width: 70px;
+            height: 70px;
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        .micro-node {
+            width: 50px;
+            height: 50px;
+            font-size: 8px;
+            font-weight: 400;
+        }
+
+        .knowledge-bg { background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%); }
+        .processes-bg { background: radial-gradient(circle, #2ecc71 0%, #27ae60 100%); }
+        .relationships-bg { background: radial-gradient(circle, #f39c12 0%, #e67e22 100%); }
+        .intelligence-bg { background: radial-gradient(circle, #9b59b6 0%, #8e44ad 100%); }
+        .learning-bg { background: radial-gradient(circle, #e91e63 0%, #c2185b 100%); }
+
+        .connection-line {
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 1;
+            opacity: 1;
+            transition: all 0.3s ease;
+        }
+
+        .connection-line.active-path {
+            stroke: rgba(74, 144, 226, 0.8);
+            stroke-width: 3;
+            filter: drop-shadow(0 0 5px rgba(74, 144, 226, 0.5));
+            animation: path-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes path-glow {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .ai-avatar {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ffffff 0%, #4a90e2 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.8);
+            z-index: 50;
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
+        }
+
+        .ai-avatar.active {
+            opacity: 1;
+            animation: avatar-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes avatar-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(74, 144, 226, 0.8);
+            }
+            50% { 
+                transform: scale(1.3);
+                box-shadow: 0 0 30px rgba(74, 144, 226, 1);
+            }
+        }
+
+        .question-panel {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            text-align: center;
+            min-width: 600px;
+        }
+
+        .question-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .question-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+        }
+
+        .question-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .question-btn.active {
+            background: rgba(74, 144, 226, 0.3);
+            border-color: #4a90e2;
+        }
+
+        .current-question {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .response-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            width: 80%;
+            max-width: 800px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .response-content {
+            font-size: 14px;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .response-step {
+            margin-bottom: 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        .response-step.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .response-step .context-source {
+            color: #4a90e2;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            text-align: center;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .control-btn.active {
+            background: rgba(74, 144, 226, 0.3);
+            border-color: #4a90e2;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .particle-trail {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(74, 144, 226, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 45;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: rgba(74, 144, 226, 0.2);
+            border-radius: 15px;
+            font-size: 12px;
+            color: #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← Back to Menu</a>
+        
+        <div class="question-panel">
+            <div class="question-selector">
+                <div class="question-btn active" onclick="selectQuestion(0)">Lead Handling</div>
+                <div class="question-btn" onclick="selectQuestion(1)">Competitive Advantages</div>
+                <div class="question-btn" onclick="selectQuestion(2)">AI Improvement</div>
+            </div>
+            <div class="current-question" id="current-question">
+                How should we handle the Global Manufacturing Corp lead?
+            </div>
+            <div class="status-indicator" id="status-indicator">Ready</div>
+        </div>
+        
+        <div class="network-container">
+            <svg class="network-canvas" width="100%" height="100%">
+                <!-- Connections will be drawn here -->
+            </svg>
+            
+            <div class="ai-avatar" id="ai-avatar"></div>
+            
+            <!-- Center Node -->
+            <div class="node center-node" data-id="context" data-level="0">
+                <div>CONTEXT<br><small>Core Hub</small></div>
+            </div>
+
+            <!-- Four Pillars -->
+            <div class="node pillar-node knowledge-bg" data-id="knowledge" data-level="1" style="left: 25%; top: 25%;">
+                <div>KNOWLEDGE<br>as Code</div>
+            </div>
+            <div class="node pillar-node processes-bg" data-id="processes" data-level="1" style="right: 25%; top: 25%;">
+                <div>PROCESSES<br>as Code</div>
+            </div>
+            <div class="node pillar-node relationships-bg" data-id="relationships" data-level="1" style="left: 25%; bottom: 25%;">
+                <div>RELATIONSHIPS<br>as Code</div>
+            </div>
+            <div class="node pillar-node intelligence-bg" data-id="intelligence" data-level="1" style="right: 25%; bottom: 25%;">
+                <div>INTELLIGENCE<br>as Code</div>
+            </div>
+
+            <!-- Knowledge Components -->
+            <div class="node component-node knowledge-bg" data-id="client-profiles" data-level="2" style="left: 15%; top: 15%;">
+                <div>Client<br>Profiles</div>
+            </div>
+            <div class="node component-node knowledge-bg" data-id="project-history" data-level="2" style="left: 35%; top: 15%;">
+                <div>Project<br>History</div>
+            </div>
+            <div class="node component-node knowledge-bg" data-id="market-research" data-level="2" style="left: 10%; top: 35%;">
+                <div>Market<br>Research</div>
+            </div>
+            <div class="node component-node knowledge-bg" data-id="competitive-intel" data-level="2" style="left: 40%; top: 35%;">
+                <div>Competitive<br>Intelligence</div>
+            </div>
+
+            <!-- Processes Components -->
+            <div class="node component-node processes-bg" data-id="lead-processing" data-level="2" style="right: 15%; top: 15%;">
+                <div>Lead<br>Processing</div>
+            </div>
+            <div class="node component-node processes-bg" data-id="safety-frameworks" data-level="2" style="right: 35%; top: 15%;">
+                <div>Safety<br>Frameworks</div>
+            </div>
+            <div class="node component-node processes-bg" data-id="quality-assurance" data-level="2" style="right: 10%; top: 35%;">
+                <div>Quality<br>Assurance</div>
+            </div>
+            <div class="node component-node processes-bg" data-id="automation" data-level="2" style="right: 40%; top: 35%;">
+                <div>Automation</div>
+            </div>
+
+            <!-- Relationships Components -->
+            <div class="node component-node relationships-bg" data-id="stakeholder-mapping" data-level="2" style="left: 15%; bottom: 15%;">
+                <div>Stakeholder<br>Mapping</div>
+            </div>
+            <div class="node component-node relationships-bg" data-id="communication-patterns" data-level="2" style="left: 35%; bottom: 15%;">
+                <div>Communication<br>Patterns</div>
+            </div>
+            <div class="node component-node relationships-bg" data-id="cross-references" data-level="2" style="left: 10%; bottom: 35%;">
+                <div>Cross<br>References</div>
+            </div>
+            <div class="node component-node relationships-bg" data-id="relationship-intel" data-level="2" style="left: 40%; bottom: 35%;">
+                <div>Relationship<br>Intelligence</div>
+            </div>
+
+            <!-- Intelligence Components -->
+            <div class="node component-node intelligence-bg" data-id="behavioral-patterns" data-level="2" style="right: 15%; bottom: 15%;">
+                <div>Behavioral<br>Patterns</div>
+            </div>
+            <div class="node component-node intelligence-bg" data-id="learning-systems" data-level="2" style="right: 35%; bottom: 15%;">
+                <div>Learning<br>Systems</div>
+            </div>
+            <div class="node component-node intelligence-bg" data-id="ai-optimization" data-level="2" style="right: 10%; bottom: 35%;">
+                <div>AI<br>Optimization</div>
+            </div>
+            <div class="node component-node intelligence-bg" data-id="strategic-insights" data-level="2" style="right: 40%; bottom: 35%;">
+                <div>Strategic<br>Insights</div>
+            </div>
+
+            <!-- Detail Nodes -->
+            <div class="node detail-node processes-bg" data-id="universal-processor" data-level="3" style="right: 18%; top: 8%;">
+                <div>Universal<br>Processor</div>
+            </div>
+            <div class="node detail-node processes-bg" data-id="assumption-prevention" data-level="3" style="right: 32%; top: 8%;">
+                <div>Assumption<br>Prevention</div>
+            </div>
+            <div class="node detail-node knowledge-bg" data-id="decision-makers" data-level="3" style="left: 18%; top: 8%;">
+                <div>Decision<br>Makers</div>
+            </div>
+            <div class="node detail-node relationships-bg" data-id="response-patterns" data-level="3" style="left: 32%; bottom: 8%;">
+                <div>Response<br>Patterns</div>
+            </div>
+            <div class="node detail-node intelligence-bg" data-id="pattern-evolution" data-level="3" style="right: 32%; bottom: 8%;">
+                <div>Pattern<br>Evolution</div>
+            </div>
+
+            <!-- Learning Nodes -->
+            <div class="node component-node learning-bg" data-id="pattern-synthesis" data-level="5" style="left: 50%; top: 15%; transform: translateX(-50%);">
+                <div>Pattern<br>Synthesis</div>
+            </div>
+            <div class="node component-node learning-bg" data-id="emergent-insights" data-level="5" style="right: 30%; top: 60%;">
+                <div>Emergent<br>Insights</div>
+            </div>
+            <div class="node component-node learning-bg" data-id="adaptive-intelligence" data-level="5" style="right: 15%; top: 50%; transform: translateY(-50%);">
+                <div>Adaptive<br>Intelligence</div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-btn" onclick="startThinking()" id="start-btn">Start Thinking</div>
+            <div class="control-btn" onclick="resetVisualization()" id="reset-btn">Reset</div>
+            <div class="control-btn" onclick="toggleSpeed()" id="speed-btn">Speed: Normal</div>
+        </div>
+
+        <div class="response-panel">
+            <div class="response-content" id="response-content">
+                <div class="response-step">
+                    <span class="context-source">Ready:</span> Select a question and click "Start Thinking" to watch AI process through the network.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let isThinking = false;
+        let animationSpeed = 1; // 1 = normal, 2 = fast, 0.5 = slow
+        let currentStep = 0;
+
+        const questions = [
+            {
+                text: "How should we handle the Global Manufacturing Corp lead?",
+                path: ['context', 'processes', 'lead-processing', 'universal-processor', 'client-profiles', 'decision-makers', 'stakeholder-mapping', 'response-patterns', 'behavioral-patterns', 'safety-frameworks', 'assumption-prevention', 'pattern-synthesis'],
+                responses: [
+                    { source: "Context", text: "Analyzing the Global Manufacturing Corp lead using our systematic approach..." },
+                    { source: "Processes", text: "Routing through our lead processing framework..." },
+                    { source: "Lead Processing", text: "Activating Universal Content Processor for structured analysis..." },
+                    { source: "Universal Processor", text: "Processing email content: From Sarah Martinez, Operations Director..." },
+                    { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees..." },
+                    { source: "Decision Makers", text: "Identified key stakeholders: Sarah Martinez (Operations), CEO contact needed..." },
+                    { source: "Stakeholder Mapping", text: "Mapping decision hierarchy: Operations → Technical → Executive approval..." },
+                    { source: "Response Patterns", text: "Analyzing preferred communication style: Professional, detailed, technical focus..." },
+                    { source: "Behavioral Patterns", text: "Pattern match: Manufacturing sector prefers comprehensive proposals..." },
+                    { source: "Safety Frameworks", text: "Applying assumption prevention: Using placeholders for unconfirmed budget..." },
+                    { source: "Assumption Prevention", text: "Flagging assumptions: Budget range [PLACEHOLDER], timeline [PLACEHOLDER]..." },
+                    { source: "Pattern Synthesis", text: "Recommendation: Detailed technical response with structured follow-up. 75% conversion probability based on sector patterns." }
+                ]
+            },
+            {
+                text: "What are our competitive advantages?",
+                path: ['context', 'knowledge', 'market-research', 'competitive-intel', 'strategic-insights', 'cross-references', 'relationship-intel', 'emergent-insights'],
+                responses: [
+                    { source: "Context", text: "Analyzing competitive positioning within our systematic framework..." },
+                    { source: "Knowledge", text: "Accessing structured business intelligence..." },
+                    { source: "Market Research", text: "Current market: AI implementation services, fragmented competitors..." },
+                    { source: "Competitive Intel", text: "Competitor analysis: Most offer individual AI tools, not integrated systems..." },
+                    { source: "Strategic Insights", text: "Key differentiator: Systematic business intelligence vs. tool collection..." },
+                    { source: "Cross References", text: "Connecting advantages: GitHub-based strategy + AI optimization + safety frameworks..." },
+                    { source: "Relationship Intel", text: "Relationship advantage: Deep integration vs. surface-level implementations..." },
+                    { source: "Emergent Insights", text: "Unique positioning: First systematic 'Everything as Code' approach with proven safety frameworks and measurable learning capabilities." }
+                ]
+            },
+            {
+                text: "How can we improve our AI responses?",
+                path: ['context', 'intelligence', 'behavioral-patterns', 'learning-systems', 'ai-optimization', 'pattern-evolution', 'adaptive-intelligence'],
+                responses: [
+                    { source: "Context", text: "Analyzing AI response optimization opportunities..." },
+                    { source: "Intelligence", text: "Accessing AI optimization framework..." },
+                    { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences identified..." },
+                    { source: "Learning Systems", text: "Pattern evolution tracking: Response quality improvement over time..." },
+                    { source: "AI Optimization", text: "Context loading efficiency: 85% relevant context utilization..." },
+                    { source: "Pattern Evolution", text: "Learning trajectory: Improved specificity, reduced assumptions..." },
+                    { source: "Adaptive Intelligence", text: "Recommendations: Increase context depth, enhance pattern recognition, integrate cross-pillar learning for 23% response quality improvement." }
+                ]
+            }
+        ];
+
+        function getNodePosition(node) {
+            const rect = node.getBoundingClientRect();
+            const containerRect = document.querySelector('.network-container').getBoundingClientRect();
+            return {
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
+            };
+        }
+
+        function drawConnections() {
+            const svg = document.querySelector('.network-canvas');
+            svg.innerHTML = '';
+            
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach(sourceNode => {
+                const sourceId = sourceNode.getAttribute('data-id');
+                const sourcePos = getNodePosition(sourceNode);
+                
+                nodes.forEach(targetNode => {
+                    const targetId = targetNode.getAttribute('data-id');
+                    if (sourceId !== targetId) {
+                        const targetPos = getNodePosition(targetNode);
+                        const distance = Math.sqrt(Math.pow(targetPos.x - sourcePos.x, 2) + Math.pow(targetPos.y - sourcePos.y, 2));
+                        
+                        if (distance < 300) { // Only draw connections between nearby nodes
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('x1', sourcePos.x);
+                            line.setAttribute('y1', sourcePos.y);
+                            line.setAttribute('x2', targetPos.x);
+                            line.setAttribute('y2', targetPos.y);
+                            line.classList.add('connection-line');
+                            line.setAttribute('data-source', sourceId);
+                            line.setAttribute('data-target', targetId);
+                            
+                            svg.appendChild(line);
+                        }
+                    }
+                });
+            });
+        }
+
+        function selectQuestion(index) {
+            if (isThinking) return;
+            
+            currentQuestionIndex = index;
+            
+            // Update question buttons
+            document.querySelectorAll('.question-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+            
+            // Update question text
+            document.getElementById('current-question').textContent = questions[index].text;
+            
+            resetVisualization();
+        }
+
+        function resetVisualization() {
+            isThinking = false;
+            currentStep = 0;
+            
+            // Reset avatar
+            const avatar = document.getElementById('ai-avatar');
+            avatar.classList.remove('active');
+            
+            // Reset all nodes
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('visited', 'active');
+            });
+            
+            // Reset connections
+            document.querySelectorAll('.connection-line').forEach(line => {
+                line.classList.remove('active-path');
+            });
+            
+            // Reset response
+            const responseContent = document.getElementById('response-content');
+            responseContent.innerHTML = '<div class="response-step visible"><span class="context-source">Ready:</span> Select a question and click "Start Thinking" to watch AI process through the network.</div>';
+            
+            // Reset status
+            document.getElementById('status-indicator').textContent = 'Ready';
+            document.getElementById('start-btn').textContent = 'Start Thinking';
+            document.getElementById('start-btn').disabled = false;
+        }
+
+        function startThinking() {
+            if (isThinking) return;
+            
+            isThinking = true;
+            currentStep = 0;
+            
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('start-btn').textContent = 'Thinking...';
+            document.getElementById('status-indicator').textContent = 'Processing...';
+            
+            // Clear response panel
+            document.getElementById('response-content').innerHTML = '';
+            
+            // Start avatar and begin traversal
+            const avatar = document.getElementById('ai-avatar');
+            avatar.classList.add('active');
+            
+            traverseNetwork();
+        }
+
+        function traverseNetwork() {
+            const question = questions[currentQuestionIndex];
+            const path = question.path;
+            const responses = question.responses;
+            
+            if (currentStep >= path.length) {
+                // Thinking complete
+                isThinking = false;
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('start-btn').textContent = 'Start Thinking';
+                document.getElementById('status-indicator').textContent = 'Complete';
+                return;
+            }
+            
+            const currentNodeId = path[currentStep];
+            const currentNode = document.querySelector(`[data-id="${currentNodeId}"]`);
+            
+            if (!currentNode) {
+                currentStep++;
+                setTimeout(traverseNetwork, 500 / animationSpeed);
+                return;
+            }
+            
+            // Move avatar to current node
+            const nodePos = getNodePosition(currentNode);
+            const avatar = document.getElementById('ai-avatar');
+            avatar.style.left = (nodePos.x - 10) + 'px';
+            avatar.style.top = (nodePos.y - 10) + 'px';
+            
+            // Highlight current node
+            currentNode.classList.add('visited', 'active');
+            
+            // Highlight connection path
+            if (currentStep > 0) {
+                const prevNodeId = path[currentStep - 1];
+                const connectionLine = document.querySelector(`[data-source="${prevNodeId}"][data-target="${currentNodeId}"], [data-source="${currentNodeId}"][data-target="${prevNodeId}"]`);
+                if (connectionLine) {
+                    connectionLine.classList.add('active-path');
+                }
+            }
+            
+            // Create particle trail
+            createParticleTrail(nodePos);
+            
+            // Add response step
+            setTimeout(() => {
+                addResponseStep(responses[currentStep]);
+                currentNode.classList.remove('active');
+                currentStep++;
+                setTimeout(traverseNetwork, 1500 / animationSpeed);
+            }, 800 / animationSpeed);
+        }
+
+        function createParticleTrail(position) {
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle-trail';
+                particle.style.left = position.x + (Math.random() - 0.5) * 20 + 'px';
+                particle.style.top = position.y + (Math.random() - 0.5) * 20 + 'px';
+                
+                document.querySelector('.network-container').appendChild(particle);
+                
+                // Animate particle
+                particle.animate([
+                    { opacity: 1, transform: 'scale(1)' },
+                    { opacity: 0, transform: 'scale(0)' }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                }).addEventListener('finish', () => particle.remove());
+            }
+        }
+
+        function addResponseStep(response) {
+            const responseContent = document.getElementById('response-content');
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'response-step';
+            stepDiv.innerHTML = `<span class="context-source">${response.source}:</span> ${response.text}`;
+            
+            responseContent.appendChild(stepDiv);
+            
+            // Animate in
+            setTimeout(() => {
+                stepDiv.classList.add('visible');
+            }, 100);
+            
+            // Auto-scroll
+            responseContent.scrollTop = responseContent.scrollHeight;
+        }
+
+        function toggleSpeed() {
+            const speedBtn = document.getElementById('speed-btn');
+            if (animationSpeed === 1) {
+                animationSpeed = 2;
+                speedBtn.textContent = 'Speed: Fast';
+            } else if (animationSpeed === 2) {
+                animationSpeed = 0.5;
+                speedBtn.textContent = 'Speed: Slow';
+            } else {
+                animationSpeed = 1;
+                speedBtn.textContent = 'Speed: Normal';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            drawConnections();
+            
+            // Position avatar at center initially
+            const centerNode = document.querySelector('[data-id="context"]');
+            const centerPos = getNodePosition(centerNode);
+            const avatar = document.getElementById('ai-avatar');
+            avatar.style.left = (centerPos.x - 10) + 'px';
+            avatar.style.top = (centerPos.y - 10) + 'px';
+        });
+
+        // Redraw connections on resize
+        window.addEventListener('resize', function() {
+            setTimeout(drawConnections, 100);
+        });
+    </script>
+</body>
+</html>
