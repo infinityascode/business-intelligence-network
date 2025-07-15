@@ -389,12 +389,16 @@
             backdrop-filter: blur(10px);
             font-size: 12px;
             text-decoration: none;
-            display: block;
+            display: inline-block;
         }
 
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .back-btn:visited {
+            color: white;
         }
 
         .particle-trail {
@@ -575,6 +579,39 @@
         let animationSpeed = 1;
         let currentStep = 0;
 
+        // Node connections for proper pathfinding
+        const nodeConnections = {
+            'context': ['knowledge', 'processes', 'relationships', 'intelligence'],
+            'knowledge': ['context', 'market-research', 'competitive-intel', 'client-profiles', 'project-history'],
+            'processes': ['context', 'lead-processing', 'safety-frameworks', 'quality-assurance', 'automation'],
+            'relationships': ['context', 'stakeholder-mapping', 'communication-patterns', 'cross-references', 'relationship-intel'],
+            'intelligence': ['context', 'behavioral-patterns', 'learning-systems', 'ai-optimization', 'strategic-insights'],
+            'market-research': ['knowledge', 'competitive-intel'],
+            'competitive-intel': ['knowledge', 'market-research', 'strategic-insights'],
+            'client-profiles': ['knowledge', 'decision-makers', 'stakeholder-mapping'],
+            'project-history': ['knowledge'],
+            'lead-processing': ['processes', 'universal-processor', 'client-profiles'],
+            'safety-frameworks': ['processes', 'assumption-prevention', 'quality-assurance'],
+            'quality-assurance': ['processes', 'safety-frameworks'],
+            'automation': ['processes'],
+            'stakeholder-mapping': ['relationships', 'client-profiles', 'response-patterns'],
+            'communication-patterns': ['relationships', 'response-patterns', 'behavioral-patterns'],
+            'cross-references': ['relationships', 'relationship-intel'],
+            'relationship-intel': ['relationships', 'cross-references', 'emergent-insights'],
+            'behavioral-patterns': ['intelligence', 'communication-patterns', 'pattern-evolution'],
+            'learning-systems': ['intelligence', 'pattern-evolution'],
+            'ai-optimization': ['intelligence', 'pattern-evolution', 'adaptive-intelligence'],
+            'strategic-insights': ['intelligence', 'competitive-intel', 'emergent-insights'],
+            'universal-processor': ['lead-processing', 'assumption-prevention'],
+            'assumption-prevention': ['universal-processor', 'safety-frameworks'],
+            'decision-makers': ['client-profiles'],
+            'response-patterns': ['stakeholder-mapping', 'communication-patterns'],
+            'pattern-evolution': ['behavioral-patterns', 'learning-systems', 'ai-optimization'],
+            'pattern-synthesis': ['emergent-insights', 'adaptive-intelligence'],
+            'emergent-insights': ['pattern-synthesis', 'relationship-intel', 'strategic-insights'],
+            'adaptive-intelligence': ['pattern-synthesis', 'ai-optimization']
+        };
+
         const questions = [
             {
                 text: "How should we handle the Global Manufacturing Corp lead?",
@@ -585,12 +622,12 @@
                     2: [
                         { source: "Context", text: "Processing Global Manufacturing Corp lead through systematic approach..." },
                         { source: "Processes", text: "Routing through lead processing framework..." },
-                        { source: "Lead Processing", text: "Activating Universal Content Processor..." },
-                        { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees..." },
-                        { source: "Decision Makers", text: "Identified Sarah Martinez, Operations Director as primary contact..." },
-                        { source: "Stakeholder Mapping", text: "Decision hierarchy: Operations → Technical → Executive approval required..." },
-                        { source: "Safety Frameworks", text: "Applying assumption prevention with placeholders for unconfirmed details..." },
-                        { source: "Recommendation", text: "Send detailed technical proposal to Sarah Martinez addressing operational efficiency. Include case studies from similar manufacturing clients. Request 30-minute discovery call within 48 hours. Follow up timeline: Day 3, Day 7, Day 14. Avoid assumptions about budget or timeline until confirmed." }
+                        { source: "Lead Processing", text: "Activating Universal Content Processor for structured analysis..." },
+                        { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees, operations focus..." },
+                        { source: "Decision Makers", text: "Identified Sarah Martinez as Operations Director, primary contact..." },
+                        { source: "Stakeholder Mapping", text: "Decision hierarchy: Operations → Technical → Executive approval process..." },
+                        { source: "Safety Frameworks", text: "Applying assumption prevention protocols for unconfirmed details..." },
+                        { source: "Strategic Recommendation", text: "Send comprehensive technical proposal to Sarah Martinez within 24 hours. Include: 1) Operations efficiency case studies from similar manufacturing clients, 2) ROI projections with conservative estimates, 3) Request for 45-minute discovery call, 4) Proposed timeline with Q4 implementation advantage. Follow-up schedule: Day 3, Day 7, Day 14. Avoid budget assumptions until confirmed in discovery call." }
                     ],
                     3: [
                         { source: "Context", text: "Processing Global Manufacturing Corp lead through systematic approach..." },
@@ -622,12 +659,12 @@
                         { source: "Generic AI", text: "Competitive advantages typically include unique value propositions, cost leadership, superior customer service, innovative technology, brand recognition, and operational efficiency. Analyze your market position and differentiate from competitors." }
                     ],
                     2: [
-                        { source: "Context", text: "Analyzing competitive positioning..." },
-                        { source: "Knowledge", text: "Accessing business intelligence..." },
-                        { source: "Market Research", text: "AI services market analysis shows fragmented landscape..." },
-                        { source: "Competitive Intel", text: "Most competitors offer individual tools, not integrated systems..." },
-                        { source: "Strategic Insights", text: "Key differentiator: Systematic approach vs. tool collection..." },
-                        { source: "Summary", text: "Our competitive advantages: 1) Systematic 'Everything as Code' approach vs. individual AI tools, 2) Integrated business intelligence rather than point solutions, 3) Safety frameworks preventing dangerous assumptions, 4) GitHub-based business strategy for version control, 5) Measurable learning capabilities with pattern recognition. Position as comprehensive business transformation, not just AI implementation." }
+                        { source: "Context", text: "Analyzing competitive positioning through systematic framework..." },
+                        { source: "Knowledge", text: "Accessing structured business intelligence database..." },
+                        { source: "Market Research", text: "AI services market shows fragmented landscape with individual tool providers..." },
+                        { source: "Competitive Intel", text: "Competitor analysis: Most offer point solutions, not integrated systems..." },
+                        { source: "Strategic Insights", text: "Key differentiator identified: Systematic approach vs. tool collection..." },
+                        { source: "Competitive Assessment", text: "Our competitive advantages: 1) Systematic 'Everything as Code' approach vs. individual AI tools, 2) Integrated business intelligence platform vs. point solutions, 3) GitHub-based business strategy with version control, 4) Safety frameworks preventing dangerous assumptions, 5) Measurable learning capabilities with behavioral pattern recognition. Market positioning: Position as comprehensive business transformation partner, not just AI implementation vendor. Pricing strategy: Value-based pricing 20-30% premium justified by systematic approach and measurable ROI." }
                     ],
                     3: [
                         { source: "Context", text: "Analyzing competitive positioning within systematic framework..." },
@@ -653,12 +690,12 @@
                         { source: "Generic AI", text: "To improve AI responses, focus on better prompts, more training data, fine-tuning models, implementing feedback loops, and regular evaluation. Consider context relevance, response accuracy, and user satisfaction metrics." }
                     ],
                     2: [
-                        { source: "Context", text: "Analyzing AI response optimization..." },
-                        { source: "Intelligence", text: "Accessing AI optimization framework..." },
-                        { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences identified..." },
-                        { source: "Learning Systems", text: "Pattern evolution tracking shows response quality improvement..." },
-                        { source: "AI Optimization", text: "Context loading efficiency: 85% relevant context utilization..." },
-                        { source: "Recommendations", text: "Improvement strategy: 1) Increase context depth from 85% to 95%, 2) Enhance pattern recognition with additional behavioral data, 3) Implement cross-pillar learning integration, 4) Add real-time feedback loops, 5) Establish quality metrics and regular assessment cycles. Expected 23% response quality improvement within 30 days." }
+                        { source: "Context", text: "Analyzing AI response optimization through systematic framework..." },
+                        { source: "Intelligence", text: "Accessing AI optimization and learning systems..." },
+                        { source: "Behavioral Patterns", text: "Current analysis: 11 communication preferences identified from user interactions..." },
+                        { source: "Learning Systems", text: "Pattern evolution tracking shows 15% response quality improvement over 30 days..." },
+                        { source: "AI Optimization", text: "Context loading efficiency measured at 85% with room for improvement..." },
+                        { source: "Optimization Strategy", text: "AI response improvement plan: 1) Increase context depth from 85% to 95% through enhanced pattern recognition, 2) Implement cross-pillar learning integration for compound intelligence, 3) Add real-time feedback loops with quality scoring, 4) Establish behavioral pattern refinement cycles every 14 days, 5) Create response quality metrics dashboard. Implementation timeline: Phase 1 (Week 1-2): Context optimization, Phase 2 (Week 3-4): Feedback systems, Phase 3 (Week 5-6): Quality metrics. Expected outcome: 23% response quality improvement within 6 weeks." }
                     ],
                     3: [
                         { source: "Context", text: "Analyzing AI response optimization opportunities..." },
@@ -692,29 +729,29 @@
             svg.innerHTML = '';
             
             const visibleNodes = document.querySelectorAll('.node.visible');
-            visibleNodes.forEach(sourceNode => {
-                const sourceId = sourceNode.getAttribute('data-id');
+            
+            Object.keys(nodeConnections).forEach(sourceId => {
+                const sourceNode = document.querySelector(`[data-id="${sourceId}"].visible`);
+                if (!sourceNode) return;
+                
                 const sourcePos = getNodePosition(sourceNode);
                 
-                visibleNodes.forEach(targetNode => {
-                    const targetId = targetNode.getAttribute('data-id');
-                    if (sourceId !== targetId) {
-                        const targetPos = getNodePosition(targetNode);
-                        const distance = Math.sqrt(Math.pow(targetPos.x - sourcePos.x, 2) + Math.pow(targetPos.y - sourcePos.y, 2));
-                        
-                        if (distance < 300) {
-                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                            line.setAttribute('x1', sourcePos.x);
-                            line.setAttribute('y1', sourcePos.y);
-                            line.setAttribute('x2', targetPos.x);
-                            line.setAttribute('y2', targetPos.y);
-                            line.classList.add('connection-line');
-                            line.setAttribute('data-source', sourceId);
-                            line.setAttribute('data-target', targetId);
-                            
-                            svg.appendChild(line);
-                        }
-                    }
+                nodeConnections[sourceId].forEach(targetId => {
+                    const targetNode = document.querySelector(`[data-id="${targetId}"].visible`);
+                    if (!targetNode) return;
+                    
+                    const targetPos = getNodePosition(targetNode);
+                    
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sourcePos.x);
+                    line.setAttribute('y1', sourcePos.y);
+                    line.setAttribute('x2', targetPos.x);
+                    line.setAttribute('y2', targetPos.y);
+                    line.classList.add('connection-line');
+                    line.setAttribute('data-source', sourceId);
+                    line.setAttribute('data-target', targetId);
+                    
+                    svg.appendChild(line);
                 });
             });
         }
