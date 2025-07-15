@@ -70,22 +70,33 @@
         }
 
         .node.visited {
-            box-shadow: 0 0 25px rgba(74, 144, 226, 0.6);
-            border-color: rgba(74, 144, 226, 0.8);
-            background-size: 100% 100%;
-            position: relative;
+            box-shadow: 0 0 30px rgba(74, 144, 226, 0.8);
+            border-color: rgba(74, 144, 226, 1);
+            transform: scale(1.1);
         }
 
         .node.visited::after {
             content: '';
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
             border-radius: 50%;
-            background: linear-gradient(45deg, rgba(74, 144, 226, 0.3), rgba(74, 144, 226, 0.1));
+            background: linear-gradient(45deg, rgba(74, 144, 226, 0.2), rgba(74, 144, 226, 0.1));
             z-index: -1;
+            animation: visited-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes visited-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: scale(1.1);
+                opacity: 1;
+            }
         }
 
         .center-node {
@@ -181,9 +192,50 @@
             }
         }
 
+        .maturity-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            margin-bottom: 10px;
+        }
+
+        .maturity-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+        }
+
+        .maturity-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .maturity-btn.active {
+            background: rgba(74, 144, 226, 0.3);
+            border-color: #4a90e2;
+        }
+
+        .maturity-btn.level-1 { border-color: rgba(231, 76, 60, 0.6); }
+        .maturity-btn.level-1.active { background: rgba(231, 76, 60, 0.3); border-color: #e74c3c; }
+        .maturity-btn.level-2 { border-color: rgba(241, 196, 15, 0.6); }
+        .maturity-btn.level-2.active { background: rgba(241, 196, 15, 0.3); border-color: #f1c40f; }
+        .maturity-btn.level-3 { border-color: rgba(74, 144, 226, 0.6); }
+        .maturity-btn.level-3.active { background: rgba(74, 144, 226, 0.3); border-color: #4a90e2; }
+
         .question-panel {
             position: absolute;
-            top: 30px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.8);
@@ -360,11 +412,31 @@
             font-size: 12px;
             color: #4a90e2;
         }
+
+        .maturity-label {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="back-btn">← Back to Menu</a>
+        
+        <div class="maturity-panel">
+            <div class="maturity-btn level-1 active" onclick="selectMaturity(1)">No Context</div>
+            <div class="maturity-btn level-2" onclick="selectMaturity(2)">Partial Context</div>
+            <div class="maturity-btn level-3" onclick="selectMaturity(3)">Full Maturity</div>
+        </div>
+        
+        <div class="maturity-label" id="maturity-label">
+            Level 1: Generic AI responses without context
+        </div>
         
         <div class="question-panel">
             <div class="question-selector">
@@ -498,7 +570,7 @@
         <div class="response-panel">
             <div class="response-content" id="response-content">
                 <div class="response-step">
-                    <span class="context-source">Ready:</span> Select a question and click "Start Thinking" to watch AI process through the network.
+                    <span class="context-source">Ready:</span> Select maturity level and question, then click "Start Thinking" to watch AI process.
                 </div>
             </div>
         </div>
@@ -506,55 +578,114 @@
 
     <script>
         let currentQuestionIndex = 0;
+        let currentMaturityLevel = 1;
         let isThinking = false;
-        let animationSpeed = 1; // 1 = normal, 2 = fast, 0.5 = slow
+        let animationSpeed = 1;
         let currentStep = 0;
+
+        const maturityLabels = {
+            1: "Level 1: Generic AI responses without context",
+            2: "Level 2: Contextual responses with partial network",
+            3: "Level 3: Full maturity with learning intelligence"
+        };
 
         const questions = [
             {
                 text: "How should we handle the Global Manufacturing Corp lead?",
-                path: ['context', 'processes', 'lead-processing', 'universal-processor', 'client-profiles', 'decision-makers', 'stakeholder-mapping', 'response-patterns', 'behavioral-patterns', 'safety-frameworks', 'assumption-prevention', 'pattern-synthesis'],
-                responses: [
-                    { source: "Context", text: "Analyzing the Global Manufacturing Corp lead using our systematic approach..." },
-                    { source: "Processes", text: "Routing through our lead processing framework..." },
-                    { source: "Lead Processing", text: "Activating Universal Content Processor for structured analysis..." },
-                    { source: "Universal Processor", text: "Processing email content: From Sarah Martinez, Operations Director..." },
-                    { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees..." },
-                    { source: "Decision Makers", text: "Identified key stakeholders: Sarah Martinez (Operations), CEO contact needed..." },
-                    { source: "Stakeholder Mapping", text: "Mapping decision hierarchy: Operations → Technical → Executive approval..." },
-                    { source: "Response Patterns", text: "Analyzing preferred communication style: Professional, detailed, technical focus..." },
-                    { source: "Behavioral Patterns", text: "Pattern match: Manufacturing sector prefers comprehensive proposals..." },
-                    { source: "Safety Frameworks", text: "Applying assumption prevention: Using placeholders for unconfirmed budget..." },
-                    { source: "Assumption Prevention", text: "Flagging assumptions: Budget range [PLACEHOLDER], timeline [PLACEHOLDER]..." },
-                    { source: "Pattern Synthesis", text: "Recommendation: Detailed technical response with structured follow-up. 75% conversion probability based on sector patterns." }
-                ]
+                responses: {
+                    1: [
+                        { source: "Generic AI", text: "To handle a manufacturing lead, you should respond promptly with your service offerings, schedule a discovery call, and provide relevant case studies. Follow up regularly and maintain professional communication." }
+                    ],
+                    2: [
+                        { source: "Context", text: "Processing Global Manufacturing Corp lead through systematic approach..." },
+                        { source: "Processes", text: "Routing through lead processing framework..." },
+                        { source: "Lead Processing", text: "Activating Universal Content Processor..." },
+                        { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees..." },
+                        { source: "Decision Makers", text: "Identified Sarah Martinez, Operations Director..." },
+                        { source: "Stakeholder Mapping", text: "Mapping decision hierarchy: Operations → Technical → Executive..." },
+                        { source: "Safety Frameworks", text: "Applying assumption prevention with placeholders..." }
+                    ],
+                    3: [
+                        { source: "Context", text: "Processing Global Manufacturing Corp lead through systematic approach..." },
+                        { source: "Processes", text: "Routing through lead processing framework..." },
+                        { source: "Lead Processing", text: "Activating Universal Content Processor..." },
+                        { source: "Universal Processor", text: "Processing email: From Sarah Martinez, Operations Director..." },
+                        { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees..." },
+                        { source: "Decision Makers", text: "Identified key stakeholders: Sarah Martinez, CEO contact needed..." },
+                        { source: "Stakeholder Mapping", text: "Mapping decision hierarchy: Operations → Technical → Executive..." },
+                        { source: "Response Patterns", text: "Analyzing communication style: Professional, detailed, technical focus..." },
+                        { source: "Behavioral Patterns", text: "Pattern match: Manufacturing sector prefers comprehensive proposals..." },
+                        { source: "Safety Frameworks", text: "Applying assumption prevention with placeholders..." },
+                        { source: "Assumption Prevention", text: "Flagging assumptions: Budget [PLACEHOLDER], timeline [PLACEHOLDER]..." },
+                        { source: "Pattern Synthesis", text: "Synthesizing behavioral patterns across all interactions..." },
+                        { source: "Emergent Insights", text: "Cross-pillar analysis reveals timing advantage in Q4..." },
+                        { source: "Adaptive Intelligence", text: "Recommendation: Detailed technical response with strategic timing. 85% conversion probability with emergent insights integration." }
+                    ]
+                },
+                paths: {
+                    1: [],
+                    2: ['context', 'processes', 'lead-processing', 'client-profiles', 'decision-makers', 'stakeholder-mapping', 'safety-frameworks'],
+                    3: ['context', 'processes', 'lead-processing', 'universal-processor', 'client-profiles', 'decision-makers', 'stakeholder-mapping', 'response-patterns', 'behavioral-patterns', 'safety-frameworks', 'assumption-prevention', 'pattern-synthesis', 'emergent-insights', 'adaptive-intelligence']
+                }
             },
             {
                 text: "What are our competitive advantages?",
-                path: ['context', 'knowledge', 'market-research', 'competitive-intel', 'strategic-insights', 'cross-references', 'relationship-intel', 'emergent-insights'],
-                responses: [
-                    { source: "Context", text: "Analyzing competitive positioning within our systematic framework..." },
-                    { source: "Knowledge", text: "Accessing structured business intelligence..." },
-                    { source: "Market Research", text: "Current market: AI implementation services, fragmented competitors..." },
-                    { source: "Competitive Intel", text: "Competitor analysis: Most offer individual AI tools, not integrated systems..." },
-                    { source: "Strategic Insights", text: "Key differentiator: Systematic business intelligence vs. tool collection..." },
-                    { source: "Cross References", text: "Connecting advantages: GitHub-based strategy + AI optimization + safety frameworks..." },
-                    { source: "Relationship Intel", text: "Relationship advantage: Deep integration vs. surface-level implementations..." },
-                    { source: "Emergent Insights", text: "Unique positioning: First systematic 'Everything as Code' approach with proven safety frameworks and measurable learning capabilities." }
-                ]
+                responses: {
+                    1: [
+                        { source: "Generic AI", text: "Competitive advantages typically include unique value propositions, cost leadership, superior customer service, innovative technology, brand recognition, and operational efficiency. Analyze your market position and differentiate from competitors." }
+                    ],
+                    2: [
+                        { source: "Context", text: "Analyzing competitive positioning..." },
+                        { source: "Knowledge", text: "Accessing business intelligence..." },
+                        { source: "Market Research", text: "AI services market analysis..." },
+                        { source: "Competitive Intel", text: "Most competitors offer individual tools, not systems..." },
+                        { source: "Strategic Insights", text: "Key differentiator: Systematic approach vs. tool collection..." }
+                    ],
+                    3: [
+                        { source: "Context", text: "Analyzing competitive positioning within systematic framework..." },
+                        { source: "Knowledge", text: "Accessing structured business intelligence..." },
+                        { source: "Market Research", text: "AI services market: fragmented competitors..." },
+                        { source: "Competitive Intel", text: "Competitor analysis: Individual tools vs. integrated systems..." },
+                        { source: "Strategic Insights", text: "Key differentiator: Systematic business intelligence..." },
+                        { source: "Cross References", text: "Connecting advantages: GitHub + AI + Safety frameworks..." },
+                        { source: "Relationship Intel", text: "Deep integration vs. surface implementations..." },
+                        { source: "Emergent Insights", text: "First systematic 'Everything as Code' approach with proven safety frameworks and measurable learning capabilities." }
+                    ]
+                },
+                paths: {
+                    1: [],
+                    2: ['context', 'knowledge', 'market-research', 'competitive-intel', 'strategic-insights'],
+                    3: ['context', 'knowledge', 'market-research', 'competitive-intel', 'strategic-insights', 'cross-references', 'relationship-intel', 'emergent-insights']
+                }
             },
             {
                 text: "How can we improve our AI responses?",
-                path: ['context', 'intelligence', 'behavioral-patterns', 'learning-systems', 'ai-optimization', 'pattern-evolution', 'adaptive-intelligence'],
-                responses: [
-                    { source: "Context", text: "Analyzing AI response optimization opportunities..." },
-                    { source: "Intelligence", text: "Accessing AI optimization framework..." },
-                    { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences identified..." },
-                    { source: "Learning Systems", text: "Pattern evolution tracking: Response quality improvement over time..." },
-                    { source: "AI Optimization", text: "Context loading efficiency: 85% relevant context utilization..." },
-                    { source: "Pattern Evolution", text: "Learning trajectory: Improved specificity, reduced assumptions..." },
-                    { source: "Adaptive Intelligence", text: "Recommendations: Increase context depth, enhance pattern recognition, integrate cross-pillar learning for 23% response quality improvement." }
-                ]
+                responses: {
+                    1: [
+                        { source: "Generic AI", text: "To improve AI responses, focus on better prompts, more training data, fine-tuning models, implementing feedback loops, and regular evaluation. Consider context relevance, response accuracy, and user satisfaction metrics." }
+                    ],
+                    2: [
+                        { source: "Context", text: "Analyzing AI response optimization..." },
+                        { source: "Intelligence", text: "Accessing AI optimization framework..." },
+                        { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences..." },
+                        { source: "Learning Systems", text: "Pattern evolution tracking..." },
+                        { source: "AI Optimization", text: "Context loading efficiency: 85%..." }
+                    ],
+                    3: [
+                        { source: "Context", text: "Analyzing AI response optimization opportunities..." },
+                        { source: "Intelligence", text: "Accessing AI optimization framework..." },
+                        { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences identified..." },
+                        { source: "Learning Systems", text: "Pattern evolution tracking: Response quality improvement..." },
+                        { source: "AI Optimization", text: "Context loading efficiency: 85% relevant context..." },
+                        { source: "Pattern Evolution", text: "Learning trajectory: Improved specificity, reduced assumptions..." },
+                        { source: "Adaptive Intelligence", text: "Recommendations: Increase context depth, enhance pattern recognition, integrate cross-pillar learning for 23% response quality improvement." }
+                    ]
+                },
+                paths: {
+                    1: [],
+                    2: ['context', 'intelligence', 'behavioral-patterns', 'learning-systems', 'ai-optimization'],
+                    3: ['context', 'intelligence', 'behavioral-patterns', 'learning-systems', 'ai-optimization', 'pattern-evolution', 'adaptive-intelligence']
+                }
             }
         ];
 
@@ -582,7 +713,7 @@
                         const targetPos = getNodePosition(targetNode);
                         const distance = Math.sqrt(Math.pow(targetPos.x - sourcePos.x, 2) + Math.pow(targetPos.y - sourcePos.y, 2));
                         
-                        if (distance < 300) { // Only draw connections between nearby nodes
+                        if (distance < 300) {
                             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                             line.setAttribute('x1', sourcePos.x);
                             line.setAttribute('y1', sourcePos.y);
@@ -599,17 +730,29 @@
             });
         }
 
+        function selectMaturity(level) {
+            if (isThinking) return;
+            
+            currentMaturityLevel = level;
+            
+            document.querySelectorAll('.maturity-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === level - 1);
+            });
+            
+            document.getElementById('maturity-label').textContent = maturityLabels[level];
+            
+            resetVisualization();
+        }
+
         function selectQuestion(index) {
             if (isThinking) return;
             
             currentQuestionIndex = index;
             
-            // Update question buttons
             document.querySelectorAll('.question-btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === index);
             });
             
-            // Update question text
             document.getElementById('current-question').textContent = questions[index].text;
             
             resetVisualization();
@@ -619,25 +762,20 @@
             isThinking = false;
             currentStep = 0;
             
-            // Reset avatar
             const avatar = document.getElementById('ai-avatar');
             avatar.classList.remove('active');
             
-            // Reset all nodes
             document.querySelectorAll('.node').forEach(node => {
                 node.classList.remove('visited', 'active');
             });
             
-            // Reset connections
             document.querySelectorAll('.connection-line').forEach(line => {
                 line.classList.remove('active-path');
             });
             
-            // Reset response
             const responseContent = document.getElementById('response-content');
-            responseContent.innerHTML = '<div class="response-step visible"><span class="context-source">Ready:</span> Select a question and click "Start Thinking" to watch AI process through the network.</div>';
+            responseContent.innerHTML = '<div class="response-step visible"><span class="context-source">Ready:</span> Select maturity level and question, then click "Start Thinking" to watch AI process.</div>';
             
-            // Reset status
             document.getElementById('status-indicator').textContent = 'Ready';
             document.getElementById('start-btn').textContent = 'Start Thinking';
             document.getElementById('start-btn').disabled = false;
@@ -653,27 +791,32 @@
             document.getElementById('start-btn').textContent = 'Thinking...';
             document.getElementById('status-indicator').textContent = 'Processing...';
             
-            // Clear response panel
             document.getElementById('response-content').innerHTML = '';
             
-            // Start avatar and begin traversal
             const avatar = document.getElementById('ai-avatar');
             avatar.classList.add('active');
             
-            traverseNetwork();
+            if (currentMaturityLevel === 1) {
+                // No network traversal for Level 1
+                const question = questions[currentQuestionIndex];
+                const responses = question.responses[1];
+                
+                setTimeout(() => {
+                    addResponseStep(responses[0]);
+                    completeThinking();
+                }, 1000);
+            } else {
+                traverseNetwork();
+            }
         }
 
         function traverseNetwork() {
             const question = questions[currentQuestionIndex];
-            const path = question.path;
-            const responses = question.responses;
+            const path = question.paths[currentMaturityLevel];
+            const responses = question.responses[currentMaturityLevel];
             
             if (currentStep >= path.length) {
-                // Thinking complete
-                isThinking = false;
-                document.getElementById('start-btn').disabled = false;
-                document.getElementById('start-btn').textContent = 'Start Thinking';
-                document.getElementById('status-indicator').textContent = 'Complete';
+                completeThinking();
                 return;
             }
             
@@ -686,16 +829,13 @@
                 return;
             }
             
-            // Move avatar to current node
             const nodePos = getNodePosition(currentNode);
             const avatar = document.getElementById('ai-avatar');
             avatar.style.left = (nodePos.x - 10) + 'px';
             avatar.style.top = (nodePos.y - 10) + 'px';
             
-            // Highlight current node
             currentNode.classList.add('visited', 'active');
             
-            // Highlight connection path
             if (currentStep > 0) {
                 const prevNodeId = path[currentStep - 1];
                 const connectionLine = document.querySelector(`[data-source="${prevNodeId}"][data-target="${currentNodeId}"], [data-source="${currentNodeId}"][data-target="${prevNodeId}"]`);
@@ -704,16 +844,21 @@
                 }
             }
             
-            // Create particle trail
             createParticleTrail(nodePos);
             
-            // Add response step
             setTimeout(() => {
                 addResponseStep(responses[currentStep]);
                 currentNode.classList.remove('active');
                 currentStep++;
                 setTimeout(traverseNetwork, 1500 / animationSpeed);
             }, 800 / animationSpeed);
+        }
+
+        function completeThinking() {
+            isThinking = false;
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('start-btn').textContent = 'Start Thinking';
+            document.getElementById('status-indicator').textContent = 'Complete';
         }
 
         function createParticleTrail(position) {
@@ -725,7 +870,6 @@
                 
                 document.querySelector('.network-container').appendChild(particle);
                 
-                // Animate particle
                 particle.animate([
                     { opacity: 1, transform: 'scale(1)' },
                     { opacity: 0, transform: 'scale(0)' }
@@ -744,12 +888,10 @@
             
             responseContent.appendChild(stepDiv);
             
-            // Animate in
             setTimeout(() => {
                 stepDiv.classList.add('visible');
             }, 100);
             
-            // Auto-scroll
             responseContent.scrollTop = responseContent.scrollHeight;
         }
 
@@ -767,11 +909,9 @@
             }
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             drawConnections();
             
-            // Position avatar at center initially
             const centerNode = document.querySelector('[data-id="context"]');
             const centerPos = getNodePosition(centerNode);
             const avatar = document.getElementById('ai-avatar');
@@ -779,7 +919,6 @@
             avatar.style.top = (centerPos.y - 10) + 'px';
         });
 
-        // Redraw connections on resize
         window.addEventListener('resize', function() {
             setTimeout(drawConnections, 100);
         });
