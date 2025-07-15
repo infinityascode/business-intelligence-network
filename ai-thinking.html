@@ -199,14 +199,26 @@
             }
         }
 
-        .maturity-panel {
+        .question-panel {
             position: absolute;
-            top: 25px;
+            top: 30px;
             left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
             z-index: 100;
+            text-align: center;
+            min-width: 700px;
+        }
+
+        .maturity-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
         }
 
         .maturity-btn {
@@ -239,21 +251,6 @@
         .maturity-btn.level-2.active { background: rgba(241, 196, 15, 0.3); border-color: #f1c40f; }
         .maturity-btn.level-3 { border-color: rgba(74, 144, 226, 0.6); }
         .maturity-btn.level-3.active { background: rgba(74, 144, 226, 0.3); border-color: #4a90e2; }
-
-        .question-panel {
-            position: absolute;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(74, 144, 226, 0.5);
-            border-radius: 10px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            text-align: center;
-            min-width: 600px;
-        }
 
         .question-selector {
             display: flex;
@@ -392,6 +389,7 @@
             backdrop-filter: blur(10px);
             font-size: 12px;
             text-decoration: none;
+            display: block;
         }
 
         .back-btn:hover {
@@ -419,38 +417,25 @@
             font-size: 12px;
             color: #4a90e2;
         }
-
-        .maturity-label {
-            position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            z-index: 100;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="back-btn">← Back to Menu</a>
         
-        <div class="maturity-panel">
-            <div class="maturity-btn level-1 active" onclick="selectMaturity(1)">No Context</div>
-            <div class="maturity-btn level-2" onclick="selectMaturity(2)">Partial Context</div>
-            <div class="maturity-btn level-3" onclick="selectMaturity(3)">Full Maturity</div>
-        </div>
-        
-        <div class="maturity-label" id="maturity-label">
-            Level 1: Generic AI responses without context
-        </div>
-        
         <div class="question-panel">
+            <div class="maturity-selector">
+                <div class="maturity-btn level-1 active" onclick="selectMaturity(1)">No Context</div>
+                <div class="maturity-btn level-2" onclick="selectMaturity(2)">Partial Context</div>
+                <div class="maturity-btn level-3" onclick="selectMaturity(3)">Full Maturity</div>
+            </div>
+            
             <div class="question-selector">
                 <div class="question-btn active" onclick="selectQuestion(0)">Lead Handling</div>
                 <div class="question-btn" onclick="selectQuestion(1)">Competitive Advantages</div>
                 <div class="question-btn" onclick="selectQuestion(2)">AI Improvement</div>
             </div>
+            
             <div class="current-question" id="current-question">
                 How should we handle the Global Manufacturing Corp lead?
             </div>
@@ -590,12 +575,6 @@
         let animationSpeed = 1;
         let currentStep = 0;
 
-        const maturityLabels = {
-            1: "Level 1: Generic AI responses without context",
-            2: "Level 2: Contextual responses with partial network",
-            3: "Level 3: Full maturity with learning intelligence"
-        };
-
         const questions = [
             {
                 text: "How should we handle the Global Manufacturing Corp lead?",
@@ -608,9 +587,10 @@
                         { source: "Processes", text: "Routing through lead processing framework..." },
                         { source: "Lead Processing", text: "Activating Universal Content Processor..." },
                         { source: "Client Profiles", text: "Creating structured profile: Global Manufacturing Corp, 500+ employees..." },
-                        { source: "Decision Makers", text: "Identified Sarah Martinez, Operations Director..." },
-                        { source: "Stakeholder Mapping", text: "Mapping decision hierarchy: Operations → Technical → Executive..." },
-                        { source: "Safety Frameworks", text: "Applying assumption prevention with placeholders..." }
+                        { source: "Decision Makers", text: "Identified Sarah Martinez, Operations Director as primary contact..." },
+                        { source: "Stakeholder Mapping", text: "Decision hierarchy: Operations → Technical → Executive approval required..." },
+                        { source: "Safety Frameworks", text: "Applying assumption prevention with placeholders for unconfirmed details..." },
+                        { source: "Recommendation", text: "Send detailed technical proposal to Sarah Martinez addressing operational efficiency. Include case studies from similar manufacturing clients. Request 30-minute discovery call within 48 hours. Follow up timeline: Day 3, Day 7, Day 14. Avoid assumptions about budget or timeline until confirmed." }
                     ],
                     3: [
                         { source: "Context", text: "Processing Global Manufacturing Corp lead through systematic approach..." },
@@ -625,8 +605,8 @@
                         { source: "Safety Frameworks", text: "Applying assumption prevention with placeholders..." },
                         { source: "Assumption Prevention", text: "Flagging assumptions: Budget [PLACEHOLDER], timeline [PLACEHOLDER]..." },
                         { source: "Pattern Synthesis", text: "Synthesizing behavioral patterns across all interactions..." },
-                        { source: "Emergent Insights", text: "Cross-pillar analysis reveals timing advantage in Q4..." },
-                        { source: "Adaptive Intelligence", text: "Recommendation: Detailed technical response with strategic timing. 85% conversion probability with emergent insights integration." }
+                        { source: "Emergent Insights", text: "Cross-pillar analysis reveals Q4 timing advantage due to budget cycles..." },
+                        { source: "Adaptive Intelligence", text: "Strategic recommendation: Send comprehensive technical proposal with Q4 implementation timeline. Include ROI calculator and 3-month pilot program option. 85% conversion probability with emergent insights integration and optimal timing." }
                     ]
                 },
                 paths: {
@@ -644,9 +624,10 @@
                     2: [
                         { source: "Context", text: "Analyzing competitive positioning..." },
                         { source: "Knowledge", text: "Accessing business intelligence..." },
-                        { source: "Market Research", text: "AI services market analysis..." },
-                        { source: "Competitive Intel", text: "Most competitors offer individual tools, not systems..." },
-                        { source: "Strategic Insights", text: "Key differentiator: Systematic approach vs. tool collection..." }
+                        { source: "Market Research", text: "AI services market analysis shows fragmented landscape..." },
+                        { source: "Competitive Intel", text: "Most competitors offer individual tools, not integrated systems..." },
+                        { source: "Strategic Insights", text: "Key differentiator: Systematic approach vs. tool collection..." },
+                        { source: "Summary", text: "Our competitive advantages: 1) Systematic 'Everything as Code' approach vs. individual AI tools, 2) Integrated business intelligence rather than point solutions, 3) Safety frameworks preventing dangerous assumptions, 4) GitHub-based business strategy for version control, 5) Measurable learning capabilities with pattern recognition. Position as comprehensive business transformation, not just AI implementation." }
                     ],
                     3: [
                         { source: "Context", text: "Analyzing competitive positioning within systematic framework..." },
@@ -656,7 +637,7 @@
                         { source: "Strategic Insights", text: "Key differentiator: Systematic business intelligence..." },
                         { source: "Cross References", text: "Connecting advantages: GitHub + AI + Safety frameworks..." },
                         { source: "Relationship Intel", text: "Deep integration vs. surface implementations..." },
-                        { source: "Emergent Insights", text: "First systematic 'Everything as Code' approach with proven safety frameworks and measurable learning capabilities." }
+                        { source: "Emergent Insights", text: "Unique market position: First systematic 'Everything as Code' approach with proven safety frameworks, measurable learning capabilities, and compound intelligence effects through network integration." }
                     ]
                 },
                 paths: {
@@ -674,9 +655,10 @@
                     2: [
                         { source: "Context", text: "Analyzing AI response optimization..." },
                         { source: "Intelligence", text: "Accessing AI optimization framework..." },
-                        { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences..." },
-                        { source: "Learning Systems", text: "Pattern evolution tracking..." },
-                        { source: "AI Optimization", text: "Context loading efficiency: 85%..." }
+                        { source: "Behavioral Patterns", text: "Current patterns: 11 communication preferences identified..." },
+                        { source: "Learning Systems", text: "Pattern evolution tracking shows response quality improvement..." },
+                        { source: "AI Optimization", text: "Context loading efficiency: 85% relevant context utilization..." },
+                        { source: "Recommendations", text: "Improvement strategy: 1) Increase context depth from 85% to 95%, 2) Enhance pattern recognition with additional behavioral data, 3) Implement cross-pillar learning integration, 4) Add real-time feedback loops, 5) Establish quality metrics and regular assessment cycles. Expected 23% response quality improvement within 30 days." }
                     ],
                     3: [
                         { source: "Context", text: "Analyzing AI response optimization opportunities..." },
@@ -685,7 +667,7 @@
                         { source: "Learning Systems", text: "Pattern evolution tracking: Response quality improvement..." },
                         { source: "AI Optimization", text: "Context loading efficiency: 85% relevant context..." },
                         { source: "Pattern Evolution", text: "Learning trajectory: Improved specificity, reduced assumptions..." },
-                        { source: "Adaptive Intelligence", text: "Recommendations: Increase context depth, enhance pattern recognition, integrate cross-pillar learning for 23% response quality improvement." }
+                        { source: "Adaptive Intelligence", text: "Strategic optimization: Implement dynamic context loading, advanced pattern synthesis, and predictive response adaptation. Cross-pillar learning integration achieves 23% response quality improvement with emergent intelligence capabilities." }
                     ]
                 },
                 paths: {
@@ -745,10 +727,8 @@
             });
             
             if (currentMaturityLevel === 1) {
-                // Level 1: Only context node
                 document.querySelector('[data-id="context"]').classList.add('visible');
             } else if (currentMaturityLevel === 2) {
-                // Level 2: Context + pillars + components + details (no learning)
                 const showLevels = [0, 1, 2, 3];
                 showLevels.forEach(level => {
                     document.querySelectorAll(`[data-level="${level}"]`).forEach(node => {
@@ -756,7 +736,6 @@
                     });
                 });
             } else if (currentMaturityLevel === 3) {
-                // Level 3: All nodes including learning
                 const showLevels = [0, 1, 2, 3, 5];
                 showLevels.forEach(level => {
                     document.querySelectorAll(`[data-level="${level}"]`).forEach(node => {
@@ -765,7 +744,6 @@
                 });
             }
             
-            // Redraw connections after visibility change
             setTimeout(drawConnections, 100);
         }
 
@@ -777,8 +755,6 @@
             document.querySelectorAll('.maturity-btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === level - 1);
             });
-            
-            document.getElementById('maturity-label').textContent = maturityLabels[level];
             
             updateNodeVisibility();
             resetVisualization();
@@ -837,7 +813,6 @@
             avatar.classList.add('active');
             
             if (currentMaturityLevel === 1) {
-                // No network traversal for Level 1
                 const question = questions[currentQuestionIndex];
                 const responses = question.responses[1];
                 
